@@ -5,6 +5,21 @@ bool is_fibonacci(int *ptr, int len, int stride) {
     ASSERT(len >= 3, "`len` should be at least 3");
     // TODO: 编写代码判断从 ptr 开始，每 stride 个元素取 1 个元素，组成长度为 n 的数列是否满足
     // arr[i + 2] = arr[i] + arr[i + 1]
+
+    // 初始化前两个 Fibonacci 数
+    int prev1 = ptr[0];
+    int prev2 = ptr[stride];
+
+    // 从第三个元素开始检查 Fibonacci 关系
+    for (int i = 2 * stride; i < len * stride; i += stride) {
+        int current = ptr[i];
+        if (current != prev1 + prev2) {
+            return false;
+        }
+        // 更新前两个 Fibonacci 数
+        prev1 = prev2;
+        prev2 = current;
+    }
     return true;
 }
 
