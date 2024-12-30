@@ -1,4 +1,5 @@
 ﻿#include "../exercise.h"
+#include <cstring>
 
 // READ: 类模板 <https://zh.cppreference.com/w/cpp/language/class_template>
 
@@ -9,7 +10,10 @@ struct Tensor4D {
 
     Tensor4D(unsigned int const shape_[4], T const *data_) {
         unsigned int size = 1;
-        // TODO: 填入正确的 shape 并计算 size
+        for (int i = 0; i < 4; ++i) {
+            shape[i] = shape_[i];  // 初始化 shape 成员变量
+            size *= shape[i];      // 计算所有维度的乘积
+        }        // TODO: 填入正确的 shape 并计算 size
         data = new T[size];
         std::memcpy(data, data_, size * sizeof(T));
     }
@@ -28,6 +32,42 @@ struct Tensor4D {
     // 则 `this` 与 `others` 相加时，3 个形状为 `[1, 2, 1, 4]` 的子张量各自与 `others` 对应项相加。
     Tensor4D &operator+=(Tensor4D const &others) {
         // TODO: 实现单向广播的加法
+        // 检查形状是否可以进行广播
+        for (int i = 0; i < 4; ++i) {
+            if (shape[i] != others.shape[i] && others.shape[i] != 1) {
+                throw std::invalid_argument("Shapes are not compatible for broadcasting.");
+            }
+        }
+
+        // 计算总的元素数量
+        unsigned int this_size = 1;
+        for (int i = 0; i < 4; ++i) {
+            this_size *= shape[i];
+        }
+
+        // 进行逐元素加法
+        for (unsigned int idx = 0; idx < this_size; ++idx) {
+            // 计算当前索引在每个维度上的位置
+            unsigned int indices[4] = {0};
+            unsigned int temp_idx = idx;
+            for (int i = 3; i >= 0; --i) {
+                indices[i] = temp_idx % shape[i];
+                temp_idx /= shape[i];
+            }
+
+            // 确定在 `others` 中对应的索引
+            unsigned int others_idx = 0;
+            unsigned int multiplier = 1;
+            for (int i = 3; i >= 0; --i) {
+                if (others.shape[i] != 1) {
+                    others_idx += indices[i] * multiplier;
+                }
+                multiplier *= others.shape[i] == 1 ? 1 : others.shape[i];
+            }
+
+            // 执行加法
+            data[idx] += others.data[others_idx];
+        }
         return *this;
     }
 };
